@@ -9,8 +9,8 @@ import cx_Oracle
 
 root=sys.argv[1]
 old_data_file=sys.argv[2]
-db_username='payroll' #username of oracle database
-db_password='password' #password for the same
+db_username='' #username of oracle database
+db_password='' #password for the same
 total_space=0
 SEE_PYTHON_CODE='OFF'  #for debug purpose
 DATABASE_CREATION_MODE='ON' #If off then No database will be created
