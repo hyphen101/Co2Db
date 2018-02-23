@@ -9,13 +9,14 @@ import cx_Oracle
 
 root=sys.argv[1]
 old_data_file=sys.argv[2]
-db_username='username' #username of oracle database
-db_password='' #password for the same
+db_username='payroll' #username of oracle database
+db_password='password' #password for the same
 total_space=0
-SEE_PYTHON_CODE='OFF'  #for debug purpose
+SEE_PYTHON_CODE='OFF'  #for insert code
 DATABASE_CREATION_MODE='ON' #If off then No database will be created
-
+DEBUG_MODE='OFF'
 decimal_point={}
+
 if len(sys.argv) <3 and DATABASE_CREATION_MODE=='ON':
     print("Error: Correct Usag ==> python "+ os.path.basename(sys.argv[0])+" <fld_file_name> <data_file_name>")
     exit()
@@ -761,7 +762,8 @@ def fill_dictionray (filename,pic_only_txt):
             split_decimal = line.split('pic')
             colum_name = split_decimal[0].strip()
             decimal_point[colum_name] = after_decimal
-            print(line.replace('\n','')+"--->"+str(after_decimal))
+            if DEBUG_MODE=='ON':
+                print(line.replace('\n','')+"--->"+str(after_decimal))
 
 
         except :
