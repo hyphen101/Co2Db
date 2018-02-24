@@ -12,11 +12,11 @@ old_data_file=sys.argv[2]
 db_username='payroll' #username of oracle database
 db_password='password' #password for the same
 total_space=0
-SEE_PYTHON_CODE='ON'  #for insert code
+SEE_PYTHON_CODE='OFF'  #for insert code
 DATABASE_CREATION_MODE='ON' #If off then No database will be created
-DEBUG_MODE='ON'
+DEBUG_MODE='OFF'
 decimal_point={}
-error_file_handle=open('error.log','w')
+error_file_handle=open('error\\error.log','w')
 if len(sys.argv) <3 and DATABASE_CREATION_MODE=='ON':
     print("Error: Correct Usag ==> python "+ os.path.basename(sys.argv[0])+" <fld_file_name> <data_file_name>")
     exit()
@@ -44,7 +44,8 @@ Output:
 	05 TR_EMP_NAME PIC (x)v99.
 '''
 def making_fld_continuous(filename):
-    print(color.CYAN + color.BOLD + '[*] Making_fld_continuous ()' + color.END)
+    #print(color.CYAN + color.BOLD + '[*] Making_fld_continuous ()' + color.END)
+    error_file_handle.write("\n*******************Making_fld_continuous ()*************************\n")
     out_put_file_name = '0.continuous_fld.txt'
     skiping_element='skip.0.continous_fld.txt'
     skip_file=open(skiping_element,'w')
@@ -70,21 +71,28 @@ def making_fld_continuous(filename):
                     previous_line=previous_line.rstrip()
                     previous_line=previous_line+line_to_append
                     continous_fld.append(previous_line)
-                    i = i+1
+
                 else:
-                    continous_fld.append(line_to_append)
-                    i = i+1
-            except TypeError as e:
-                continous_fld.append(line_to_append)
-                skip_file.write(e)
-                i = i+1
-            except IndexError as z:
-                i=i+1
-                #print("It is having index error"+line_to_append)
-    skip_file.close()
+                    isolated_occurs=re.search('^OCCURS',line_to_append.strip(),re.IGNORECASE)
+                    if isolated_occurs is not None:
+                        x=continous_fld.pop()
+                        new_push=non_continous_fld[i-1].replace("\n",' ') + line_to_append.strip()
+                        continous_fld.append(new_push)
+                    else:
+                        continous_fld.append(line_to_append)
+
+
+            except Exception as e:
+                continous_fld.append("this"+line_to_append)
+                error_file_handle.write(str(e)+'\n')
+            i=i+1
+
+
     for line in continous_fld:
         f_output_file.write(line)
     f_output_file.close()
+    error_file_handle.write('\n************************************************************************')
+
     return out_put_file_name
 
 '''
@@ -95,7 +103,8 @@ rm_empty_line function for removing empty line in fld.
 	
 	
 def rm_empty_line(filename):
-    print(color.CYAN +color.BOLD+"[*] Currently Executing rm_empty_line() "+color.END)
+    #print(color.CYAN +color.BOLD+"[*] Currently Executing rm_empty_line() "+color.END)
+    error_file_handle.write('\n*************************[*] rm_empty_line()**********************************')
     if not os.path.isfile(filename):
         print("{} does not exist ".format(filename))
         return
@@ -107,6 +116,7 @@ def rm_empty_line(filename):
         lines = filter(lambda x: x.strip(), lines) #strip() function remove spaces
         filehandle.writelines(lines)
     filehandle.close()
+    error_file_handle.write('\n***************************************************************')
 '''
 rm_cmt_line_sign_start_line function used for removing comment line and sign leading separate character 
 
@@ -114,7 +124,8 @@ rm_cmt_line_sign_start_line function used for removing comment line and sign lea
 '''
 
 def rm_cmt_line_sign_start_line(filename):
-    print(color.CYAN+color.BOLD+'[*] Currently Execting rm_cmt_line_sign_start_line ()'+color.END)
+    #print(color.CYAN+color.BOLD+'[*] Currently Execting rm_cmt_line_sign_start_line ()'+color.END)
+    error_file_handle.write('\n*************************rm_cmt_line_sign_start_line ()**********************************')
     out_put_error='error1.rm_cmt_sign_start_line_space'
     error_d=open(out_put_error,'w')
     out_put_file_name='1.after_rm_cmt_sign_start_line_space.txt'  
@@ -125,8 +136,10 @@ def rm_cmt_line_sign_start_line(filename):
             try:
                 if len(line_to_append)>1 and line_to_append[6] =='*': #detecting comment if comment line then not write to output file
                     continue
-            except:
-                error_d.write(line_to_append+'\n')
+            except Exception as e:
+                error_d.write(line_to_append+" "+ str(e)+ '\n')
+
+                error_file_handle.write(line_to_append+" "+ str(e)+ '\n')
             line_to_append = re.sub('sign.*', ' ', line_to_append) #replacing line sign leading with space
             line_to_append = line_to_append.lstrip()
             f_output_file.write(line_to_append)
@@ -134,21 +147,25 @@ def rm_cmt_line_sign_start_line(filename):
     f_output_file.close()
     error_d.close()
     rm_empty_line(out_put_file_name) # due to above operation some empty line will be created so we have to remove them 
+    error_file_handle.write('\n*******************************************************************')
     return out_put_file_name
 	
 '''
 remove_initail_head_area function for removing initial 05 ,10 like number.
 Ex.
+retrr.
+tretert.
 05 TR_EMP_NAME pic X(30).
 
 Output:
-TR_EMP_NAME pic X(30).
+05 TR_EMP_NAME pic X(30).
 
 
 '''	
 	
 def remove_initail_head_area(filename):
-    print(color.CYAN + color.BOLD + '[*] remove_initail_head_area()' + color.END)
+    #print(color.CYAN + color.BOLD + '[*] remove_initail_head_area()' + color.END)
+    error_file_handle.write('\n***************************remove_initail_head_area()******************************')
     out_put_file_name = '2.0 remove_initail_head_area.txt'
     f_output_file = open(out_put_file_name, 'w')
     with open(filename, 'r') as reader:
@@ -162,6 +179,7 @@ def remove_initail_head_area(filename):
     reader.close()
     f_output_file.close()
     rm_empty_line(out_put_file_name)
+    error_file_handle.write('\n*******************************************************************')
     return out_put_file_name
 '''
 correct_occurs_statement function for making correct occur statement
@@ -230,7 +248,8 @@ which is doubly declare by redefine
 '''
 def rm_refines_statement(filename):
     #reading and appeding into a dictionary
-    print(color.CYAN+color.BOLD+'[*] Currently Executing rm_refines_statement()'+color.END)
+   # print(color.CYAN+color.BOLD+'[*] Currently Executing rm_refines_statement()'+color.END)
+    error_file_handle.write('\n**************************rm_refines_statement()*******************')
     error_file_name='error.2.after_rm_refines_statement.txt'
     error_d=open(error_file_name,'w')
     out_put_file_name='2.after_rm_refines_statement.txt'
@@ -253,8 +272,9 @@ def rm_refines_statement(filename):
                 f_output_file.write(fld_list_having_redefine[i])
                 i = i + 1
         except :
-            error_d.write(fld_list_having_redefine[i]+" In rm_redifiner give some error so that I skip"+'\m')
+            error_file_handle.write(fld_list_having_redefine[i]+" In rm_redifiner give some error so that I skip"+'\n')
     error_d.close()
+    error_file_handle.write("\n*******************************************************************")
     return out_put_file_name
 	
 '''
@@ -266,6 +286,7 @@ def repetiotion_from_this_index(before_loop,line_no):
     repeat=[]   #repeat[] will hold statement under occur statement
     after_pic=[]
     count=0
+    error_file_handle.write("\n*********************************repetiotion_from_this_index*******************************")
     base_variable = int(before_loop[line_no-1][0:2])
     while (1):
         try:
@@ -283,8 +304,9 @@ def repetiotion_from_this_index(before_loop,line_no):
                 after_pic.append(z.group())
                 repeat.append(string.strip())
                 line_no=line_no+1
-            except:
-                print(before_loop[line_no]+" Need to Skip Unable to Parse")
+            except Exception as e:
+                #print(before_loop[line_no]+" Need to Skip Unable to Parse")
+                error_file_handle.write(before_loop[line_no]+"skiped  due to"+ str(e)+'\n')
                 line_no=line_no+1
                 continue
         else:
@@ -292,6 +314,7 @@ def repetiotion_from_this_index(before_loop,line_no):
             #print("break for "+before_loop[line_no])
 
             break
+    error_file_handle.write('\n*****************************y********************************')
     return [count,repeat,after_pic]
 
 
@@ -323,7 +346,8 @@ reslove_loop function used for resolving occur statement
 
 '''
 def resolve_loop(filename):
-    print(color.CYAN+color.BOLD+"[*] Currently Executing reslove_loop()"+color.END)
+    #print(color.CYAN+color.BOLD+"[*] Currently Executing reslove_loop()"+color.END)
+    error_file_handle.write("\n******************************reslove_loop()**************************")
     out_put_file_name ='3.after_loop_reslove.txt'
     f_out_loop = open(out_put_file_name,'w')
     before_loop_fld=[]
@@ -355,20 +379,25 @@ def resolve_loop(filename):
             try:
                 loop_times = int(m.group(1))
                 #print(before_loop_fld[line_no]+ "having loop of "+str(loop_times))
-            except:
+            except Exception as e:
+                error_file_handle.write(before_loop_fld[line_no]+ " unable to find reptiotion "+str(e)+'\n')
                 print(color.RED+color.BOLD+"Unable to Find time of repition for the line",before_loop_fld[line_no]+color.END)
-            n = re.search('(?:OCCURS).(\s*\d+)', before_loop_fld[line_no + 1], re.IGNORECASE)
-            #print("Single Line repeat I think"+before_loop_fld[line_no])
-            if n is not None:
-                twoD_loop_times = int(n.group(1))
-                #print("2D arrrrrrr" + str(twoD_loop_times))
-                skip, repeat_these, pic_repeat = repetiotion_from_this_index(before_loop_fld, line_no + 2)
-                function_to_repeat_2D(with_loop, repeat_these, line_no + 2, loop_times, twoD_loop_times, pic_repeat)
-                line_no = line_no + 2 + skip
-            else:
-                skip, repeat_these, pic_repeat = repetiotion_from_this_index(before_loop_fld, line_no + 1)
-                function_to_repeat(with_loop, repeat_these, line_no + 1, loop_times, pic_repeat)
-                line_no = line_no + skip + 1
+            try:
+                n = re.search('(?:OCCURS).(\s*\d+)', before_loop_fld[line_no + 1], re.IGNORECASE)
+                #print("Single Line repeat I think"+before_loop_fld[line_no])
+                if n is not None:
+                    twoD_loop_times = int(n.group(1))
+                    #print("2D arrrrrrr" + str(twoD_loop_times))
+                    skip, repeat_these, pic_repeat = repetiotion_from_this_index(before_loop_fld, line_no + 2)
+                    function_to_repeat_2D(with_loop, repeat_these, line_no + 2, loop_times, twoD_loop_times, pic_repeat)
+                    line_no = line_no + 2 + skip
+                else:
+                    skip, repeat_these, pic_repeat = repetiotion_from_this_index(before_loop_fld, line_no + 1)
+                    function_to_repeat(with_loop, repeat_these, line_no + 1, loop_times, pic_repeat)
+                    line_no = line_no + skip + 1
+            except Exception as e:
+                error_file_handle.write(str(e)+'\n')
+
         else:
             with_loop.append(before_loop_fld[line_no])
             line_no = line_no + 1
@@ -381,6 +410,7 @@ def resolve_loop(filename):
             #print(with_loop[i])
             z=0
     f_out_loop.close()
+    error_file_handle.write("\n*****************************************************")
     return out_put_file_name
 def make_this_line_in_pic_format(line):
 
@@ -394,8 +424,8 @@ def make_this_line_in_pic_format(line):
 
 
 def rm_non_essential_line(filename):
-    print(color.CYAN+color.BOLD+"[*] Currently Executing rm_non_essential_line"+color.END)
-    error_file_handle.write('........................Function :rm_non_essential_line..............................')
+    #print(color.CYAN+color.BOLD+"[*] Currently Executing rm_non_essential_line"+color.END)
+    error_file_handle.write('\n.....*..................Function :rm_non_essential_line..............................')
     f_out_filename='4. cobol_final_view_verify_by_this.txt'
     f_out_des=open(f_out_filename,'w')
     with open(filename,'r') as reader:
@@ -412,14 +442,13 @@ def rm_non_essential_line(filename):
                 error_file_handle.write('\n'+line)
     reader.close()
     f_out_des.close()
-    error_file_handle.write('.........................................................................................')
-    error_file_handle.close()
+    error_file_handle.write('\n.........................................................................................')
     return f_out_filename
 
 
 
 def remove_intial_2digit_number_and_replace_hyphen(filename):
-    print(color.CYAN+color.BOLD+"[*] Currrently Executing remove_intial_2digit_number_and_replace_hyphen()"+color.END)
+    #print(color.CYAN+color.BOLD+"[*] Currrently Executing remove_intial_2digit_number_and_replace_hyphen()"+color.END)
     f_out_filename='5.remove_2digit_hyphen.txt'
     f_out_des=open(f_out_filename,'w')
     fld_file=[]
@@ -490,7 +519,7 @@ def space_return(line): #function
 
 
 def creating_column_and_size_file(filename):
-    print(color.CYAN+color.BOLD+"[*] Currently Executing creating_column_and_size_file()"+color.END)
+    #print(color.CYAN+color.BOLD+"[*] Currently Executing creating_column_and_size_file()"+color.END)
     column_name_txt='6.column_name_may_have_dublicate.txt'
     size_of_column_txt='6.size_of_column_text.txt'
     mix_col_size='6.mix_col_size_verify_by_this.txt'
@@ -528,7 +557,7 @@ def creating_column_and_size_file(filename):
 
 
 def resolve_dublicate(filename):
-    print(color.CYAN+color.BOLD+"[*] resolve_dublicate()"+color.END)
+    #print(color.CYAN+color.BOLD+"[*] resolve_dublicate()"+color.END)
     f_out_filename='7.colum_name_without_dublicate.txt'
     f_des=open(f_out_filename,'w')
     attribute=[]
@@ -552,7 +581,7 @@ def resolve_dublicate(filename):
     return f_out_filename
 
 def index_initilization (attribute_file ,size_file):
-    print(color.CYAN+color.BOLD+"[*] Executing index_initilization()"+color.END)
+    #print(color.CYAN+color.BOLD+"[*] Executing index_initilization()"+color.END)
     f_out_filename='8.code_file_index_selection'
     code_file_index_selection = open(f_out_filename, 'w')
     attribute=[]
@@ -605,8 +634,8 @@ def index_initilization (attribute_file ,size_file):
 
 
 def table_varhar_creation(attribute,size,pic_only):
-
-    print(color.CYAN+color.BOLD+"[*] currently Executing table_varhar_creation()"+color.END)
+    error_file_handle.write("******************table_varchar_creation************")
+    #print(color.CYAN+color.BOLD+"[*] currently Executing table_varhar_creation()"+color.END)
     f_out_file_name='9.create_table_command.txt'
     create_table_with_this_data=open(f_out_file_name,'w')
     pic_fld=[]
@@ -634,14 +663,12 @@ def table_varhar_creation(attribute,size,pic_only):
             if attribute[i] in decimal_point.keys() and decimal_point[attribute[i]]>0:
                 try:
                     create_table_with_this_data.write(attribute[i]+'\t\t     '+'varchar'+'('+str(int(size[i])+1)+' char'+')')
-                except:
-                    print("Bhai this line")
-                    print(attribute[i])
-                    print(size[i])
-                    print("Bhai end")
+                except Exception as e:
+                    error_file_handle.write(attribute[i]+str(size[i]) + "error "+ str(e)+ "\n")
             else:
                 create_table_with_this_data.write(attribute[i]+'\t\t'+'varchar'+'('+str(size[i])+' char'+')')
     create_table_with_this_data.close()
+    error_file_handle.write("**********************************")
     return f_out_file_name
 def code_write(file_name,attribute_clean):
     code_file=open('insert_data.py','a')
@@ -661,7 +688,7 @@ def code_write(file_name,attribute_clean):
     code_file.write("\nconnection = cx_Oracle.connect("+temp+")")
     code_file.write("\ncur=connection.cursor()")
     code_file.write("\nold_data_file="+"'"+old_data_file+"'")
-    code_file.write("\nerror_insert=open('error_insert_py.txt','w')")
+    code_file.write("\nerror_insert=open('error\\error_insert_py.log','w')")
     code_file.write("\nwith open(old_data_file) as f:")
     code_file.write("\n    for line in f:")
     code_file.write("\n        detail_list.append(line)")
@@ -700,7 +727,8 @@ def code_write(file_name,attribute_clean):
     code_file.write('\ncur.close()')
     code_file.write('\nconnection.close()')
     code_file.write('\nend = time.time()')
-    code_file.write('\nprint("Total Time taken For Insertion is " + str(end - start) + " seconds")')
+    code_file.write('\nprint("Sucessfull Conversion !!!")')
+    code_file.write('\nprint("Total Time taken For Conversion is " + str(end - start) + " seconds")')
 
 
 def table_creation():
@@ -815,14 +843,17 @@ fill_dictionray(attribute,pic_only_txt)
 index_code_file,attribute_arry,size_arry=index_initilization(attribute,size) #8
 out=table_varhar_creation(attribute_arry,size_arry,pic_only_txt) #9
 
-print(color.BLUE+color.BOLD +" Database Creation Mode is "+color.RED+color.BOLD+DATABASE_CREATION_MODE+color.END)
+print(color.BLUE+color.BOLD +"Database Creation Mode is "+color.RED+color.BOLD+DATABASE_CREATION_MODE+color.END)
 if(DATABASE_CREATION_MODE is 'ON'):
     code_write(index_code_file,attribute_arry)
     error_in_creation=table_creation()
-    print("Having "+str(error_in_creation) +" in table creation")
+    if error_in_creation is not None:
+        print("Having "+str(error_in_creation) +" in table creation")
 
     if error_in_creation is None:
         os.system('python insert_data.py')
         if SEE_PYTHON_CODE=='OFF':
             with open("insert_data.py",'w') as we:
                 we.write('')
+
+error_file_handle.close()
