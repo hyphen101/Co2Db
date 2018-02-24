@@ -12,11 +12,11 @@ old_data_file=sys.argv[2]
 db_username='payroll' #username of oracle database
 db_password='password' #password for the same
 total_space=0
-SEE_PYTHON_CODE='OFF'  #for insert code
+SEE_PYTHON_CODE='ON'  #for insert code
 DATABASE_CREATION_MODE='ON' #If off then No database will be created
-DEBUG_MODE='OFF'
+DEBUG_MODE='ON'
 decimal_point={}
-
+error_file_handle=open('error.log','w')
 if len(sys.argv) <3 and DATABASE_CREATION_MODE=='ON':
     print("Error: Correct Usag ==> python "+ os.path.basename(sys.argv[0])+" <fld_file_name> <data_file_name>")
     exit()
@@ -382,9 +382,20 @@ def resolve_loop(filename):
             z=0
     f_out_loop.close()
     return out_put_file_name
+def make_this_line_in_pic_format(line):
+
+    attribute_name_plus_val=line.split('value')
+    attribute_name=attribute_name_plus_val[0]
+    list_of_element=line.split("'")[1::2];
+    size=len(max(list_of_element,key=len))
+    final_line=attribute_name+ ' PIC '+ 'X('+str(size) +')'
+    return final_line
+
+
 
 def rm_non_essential_line(filename):
     print(color.CYAN+color.BOLD+"[*] Currently Executing rm_non_essential_line"+color.END)
+    error_file_handle.write('........................Function :rm_non_essential_line..............................')
     f_out_filename='4. cobol_final_view_verify_by_this.txt'
     f_out_des=open(f_out_filename,'w')
     with open(filename,'r') as reader:
@@ -392,8 +403,17 @@ def rm_non_essential_line(filename):
             if 'pic' in line or 'PIC' in line:
                 #print("gooo_line")
                 f_out_des.write(line)
+            else:
+                '''try:
+                    if(line[0:2]=='88'):
+                        line_to_append=make_this_line_in_pic_format(line)
+                        f_out_des.write(line_to_append+'\n')
+                except Exception as e:'''
+                error_file_handle.write('\n'+line)
     reader.close()
     f_out_des.close()
+    error_file_handle.write('.........................................................................................')
+    error_file_handle.close()
     return f_out_filename
 
 
@@ -602,25 +622,25 @@ def table_varhar_creation(attribute,size,pic_only):
 
 
     for i in range(0,len(attribute)):
-        if(pic_fld[i][0]=='v'):
+        if(pic_fld[i][0]=='v' or pic_fld[i][0]=='V' or pic_fld[i][0]=='s' or pic_fld[i][0]=='S'):
             size[i]=int(size[i])+1
             size[i]=str(size[i])
         if i<len(attribute)-1:
             if attribute[i] in decimal_point.keys() and decimal_point[attribute[i]]>0:
-                create_table_with_this_data.write(attribute[i]+'\t\t'+'varchar'+'('+str(int(size[i])+1)+')'+',')
+                create_table_with_this_data.write(attribute[i]+'\t\t'+'varchar'+'('+str(int(size[i])+1)+' char'+')'+',')
             else:
-                create_table_with_this_data.write(attribute[i]+'\t\t'+'varchar'+'('+str(size[i])+')'+',')
+                create_table_with_this_data.write(attribute[i]+'\t\t'+'varchar'+'('+str(size[i])+' char'+')'+',')
         else:
             if attribute[i] in decimal_point.keys() and decimal_point[attribute[i]]>0:
                 try:
-                    create_table_with_this_data.write(attribute[i]+'\t\t     '+'varchar'+'('+str(int(size[i])+1)+')')
+                    create_table_with_this_data.write(attribute[i]+'\t\t     '+'varchar'+'('+str(int(size[i])+1)+' char'+')')
                 except:
                     print("Bhai this line")
                     print(attribute[i])
                     print(size[i])
                     print("Bhai end")
             else:
-                create_table_with_this_data.write(attribute[i]+'\t\t'+'varchar'+'('+str(size[i])+')')
+                create_table_with_this_data.write(attribute[i]+'\t\t'+'varchar'+'('+str(size[i])+' char'+')')
     create_table_with_this_data.close()
     return f_out_file_name
 def code_write(file_name,attribute_clean):
@@ -756,6 +776,11 @@ def fill_dictionray (filename,pic_only_txt):
                 for j in range(0, len(after_decimal_non_int[1])):
                     if after_decimal_non_int[1][j] == 'x' or after_decimal_non_int[1][j] == '9':
                         after_decimal = after_decimal + 1
+        value_start_with_dec_det=fld_corros_size[i].split('pic')
+        value_start_with_dec_det_val=value_start_with_dec_det[1]
+        val=value_start_with_dec_det_val.strip()
+        #if val[0]=='s' or val[0]=='S':
+         #   after_decimal=after_decimal-1
 
         try:
             line = line.lower()
@@ -773,7 +798,7 @@ def fill_dictionray (filename,pic_only_txt):
 
 
 
-
+rm_empty_line(root)
 continous_fld=making_fld_continuous(root)
 filename_rm_cmt = rm_cmt_line_sign_start_line(continous_fld) #1
 remove_head=remove_initail_head_area(filename_rm_cmt)
