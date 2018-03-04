@@ -12,7 +12,7 @@ old_data_file=sys.argv[2]
 db_username='payroll' #username of oracle database
 db_password='password' #password for the same
 total_space=0
-SEE_PYTHON_CODE='OFF'  #for insert code
+SEE_PYTHON_CODE='OF'  #for insert code
 DATABASE_CREATION_MODE='ON' #If off then No database will be created
 DEBUG_MODE='OFF'
 decimal_point={}
@@ -240,12 +240,65 @@ def delete_from_this_index(fld, i):
             i=i+1
         else:
             return extra+1
+def supplementry_of_redefine_remove(redefine_list,fld_line,ef):
+    for remove_this in redefine_list:
+        i=0
+        while(i<len(fld_line)):
+            if remove_this in fld_line[i] and 'redefines' not in fld_line[i]:
+                intial_two_digit=fld_line[i][0:2]
+                line=fld_line[i]
+                if 'pic' in line:
+                    line=line.replace('pic','non_essesntial_line')
+                    fld_line[i]=line
+
+                    index=i+1
+                    while(intial_two_digit<fld_line[index][0:2]):
+                        line=fld_line[index]
+                        try:
+                            line = line.replace('pic', 'non_essesntial_line')
+                            fld_line[index]=line
+                        except:
+                            print("This Line is not having pic"+line)
+
+                        index=index+1
+
+
+                    break
+            i=i+1
+
+
+
+def rm_refines_statement(filename):
+    error_file_handle.write('\n**************************rm_refines_statement()*******************')
+    error_file_name = 'error.2.after_rm_refines_statement.txt'
+    error_d = open(error_file_name, 'w')
+    out_put_file_name = '2.after_rm_refines_statement.txt'
+    f_output_file = open(out_put_file_name, 'w')
+    redefine_list=[]
+    fld_line=[]
+    with open(filename,'r') as reader:
+        for line in reader:
+            line=line.lower()
+            fld_line.append(line)
+            if 'redefines' in line:
+                splitted=line.split('redefines')
+                remove_this=splitted[1]
+                remove_this=remove_this.replace('.','')
+                remove_this=remove_this.strip()
+                redefine_list.append(remove_this)
+    reader.close()
+
+
+    supplementry_of_redefine_remove(redefine_list,fld_line,error_d)
+    for line in fld_line:
+        f_output_file.write(line)
+    return out_put_file_name
+
 			
 '''
 rm_refines_statement function to remove one of declaration of a single statement 
 which is doubly declare by redefine
 
-'''
 def rm_refines_statement(filename):
     #reading and appeding into a dictionary
    # print(color.CYAN+color.BOLD+'[*] Currently Executing rm_refines_statement()'+color.END)
@@ -277,10 +330,8 @@ def rm_refines_statement(filename):
     error_file_handle.write("\n*******************************************************************")
     return out_put_file_name
 	
-'''
 repetiotion_from_this_index function give list of statement which
 comes under occur statement  
-
 '''
 def repetiotion_from_this_index(before_loop,line_no):
     repeat=[]   #repeat[] will hold statement under occur statement
@@ -574,7 +625,7 @@ def resolve_dublicate(filename):
     for s, num in counts.items():
         if num > 1:  # ignore strings that only appear once
             for suffix in range(1, num + 1):  # suffix starts at 1 and increases by 1 each time
-                attribute[attribute.index(s)] = s + str(suffix)
+                attribute[attribute.index(s)] = s + str(suffix)+'_dub'
 
     for i in range(0,len(attribute)):
         f_des.write(attribute[i]+'\t\t'+':'+'\t\t\n')
@@ -858,3 +909,5 @@ if(DATABASE_CREATION_MODE is 'ON'):
 
 error_file_handle.close()
 print("Done!!!!!!!")
+
+
