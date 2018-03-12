@@ -262,7 +262,7 @@ def delete_from_this_index(fld, i):
 		else:
 			return extra + 1
 
-
+single_line_red=[]
 def supplementry_of_redefine_remove(redefine_list, fld_line, ef):
 	for remove_this in redefine_list:
 		i = 0
@@ -297,16 +297,30 @@ def rm_refines_statement(filename):
 	f_output_file = open(out_put_file_name, 'w')
 	redefine_list = []
 	fld_line = []
-	with open(filename, 'r') as reader:
-		for line in reader:
-			line = line.lower()
-			fld_line.append(line)
+	with open(filename, 'r+') as reader:
+		for lines in reader:
+			line = lines.lower()
+
 			if 'redefines' in line:
-				splitted = line.split('redefines')
-				remove_this = splitted[1]
-				remove_this = remove_this.replace('.', '')
-				remove_this = remove_this.strip()
-				redefine_list.append(remove_this)
+				if 'pic' not in line:
+					splitted = line.split('redefines')
+					remove_this = splitted[1]
+					remove_this = remove_this.replace('.', '')
+					remove_this = remove_this.strip()
+					redefine_list.append(remove_this)
+					fld_line.append(line)
+				else:
+					splitted = line.split('redefines')
+					remove_this_d = splitted[1].split('pic')
+					remove_this=remove_this_d[0]
+					remove_this = remove_this.replace('.', '')
+					remove_this = remove_this.strip()
+					add_this=splitted[0] +" "+'pic' +" "+remove_this_d[1]
+					fld_line.append(add_this)
+					redefine_list.append(remove_this)
+			else:
+				fld_line.append(line)
+
 	reader.close()
 
 	supplementry_of_redefine_remove(redefine_list, fld_line, error_d)
